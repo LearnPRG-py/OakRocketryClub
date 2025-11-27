@@ -2,8 +2,22 @@
 
 int pinDOut = 2;
 int pinSCK = 3;
-int knownWeight = 0.5;
+int knownWeight;
 HX711 scale;
+
+void modeSelector(input){
+  global knownWeight;
+  if (input == "Cal"){
+    knownWeight = Serial.prompt("What is the known weight in kg?");
+    calibration(knownWeight);
+  }
+  if(input == "Rec"){
+    scale.tare;
+    for(int i = 0; i<1000; i++){
+      Serial.println(scale.read());
+    }
+  }
+}
 
 void calibration(knownWeight) {
   if (scale.is_ready()){
@@ -30,6 +44,4 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   calibration(knownWeight);
-  scale.tare;
-  Serial.println(scale.read());
 }
