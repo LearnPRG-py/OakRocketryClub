@@ -14,10 +14,11 @@ bool fillToBuffer = false;
 bool filledToBuffer = false;
 constexpr int endCheckFrames = 10; // Will check 330ms of low reading to detect end.
 int motorZeroFrames = 0;
+constexpr int bufferSize = 200;
 
 void setup() {
   Serial.begin(9600);
-  buf.reserve(200);
+  buf.reserve(bufferSize);
   scale.begin(DOUT, SCK);
 
   Serial.println("Remove all weight");
@@ -57,8 +58,13 @@ void loop() {
     }
   }
   if (filledToBuffer) {
+    Serial.println("=== Starting Data Stream ===");
+    Serial.print("[");
     for (float v : buf) {
-      Serial.println(v, 3);
+      Serial.print(v, 3);
+      Serial.print(", ");
     }
+    Serial.println("]");
+    Serial.println("=== Ended Data Stream ===");
   }
 }
