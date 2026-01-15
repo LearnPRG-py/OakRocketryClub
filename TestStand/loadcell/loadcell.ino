@@ -1,24 +1,38 @@
 #include "HX711.h"
-#include <vector>
+#include <stdio.h>
 
 #define DOUT 3
 #define SCK  2
 
 // So that the array can grow on it's own
-std::vector<float> buf;
 
 HX711 scale;
 
+constexpr int endCheckFrames = 10; // Will check 330ms of low reading to detect end
+constexpr int bufferSize = 200;
+struct ReadingSpan {
+  float readingArray[bufferSize];
+  int currentIndex;
+};
+
+void AppendToSpan(float value, ReadingSpan& readingSpan){
+  if (readingSpan.currentIndex < bufferSize - 1) {
+    readingSpan.readingArray[readingSpan.currentIndex] = value;
+    readingSpan.currentIndex++;
+  }
+  else {
+    // Do not mutate the list and ignore the call.
+  }
+}
+
+struct ReadingSpan readingSpan = { {}, 0 };
 float calibrationFactor = 1.0;
 bool fillToBuffer = false;
 bool filledToBuffer = false;
-constexpr int endCheckFrames = 10; // Will check 330ms of low reading to detect end.
 int motorZeroFrames = 0;
-constexpr int bufferSize = 200;
 
 void setup() {
   Serial.begin(9600);
-  buf.reserve(bufferSize);
   scale.begin(DOUT, SCK);
 
   Serial.println("Remove all weight");
@@ -45,7 +59,7 @@ void loop() {
     fillToBuffer = true;
   }
   if (fillToBuffer) {
-    buf.push_back(reading);
+    AppendToSpan(reading, readingSpan);
     if (reading < 0.01){
       ++motorZeroFrames;
       if (motorZeroFrames > endCheckFrames){
@@ -60,8 +74,8 @@ void loop() {
   if (filledToBuffer) {
     Serial.println("=== Starting Data Stream ===");
     Serial.print("[");
-    for (float v : buf) {
-      Serial.print(v, 3);
+    for (int index = 0; index < readingSpan.currentIndex; index++) {
+      Serial.print(readingSpan.readingArray[index]);
       Serial.print(", ");
     }
     Serial.println("]");
