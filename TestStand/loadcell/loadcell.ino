@@ -79,6 +79,12 @@ void ReadSpanFromEEPROM() {
   Serial.println("]");
   Serial.println("=== END DUMP ===");
 }
+void ClearEEPROM() {
+  uint16_t zero = 0;
+  EEPROM.put(EEPROM_COUNT_ADDR, zero);
+  Serial.println("EEPROM cleared (count reset).");
+}
+
 
 // ===== SETUP =====
 void setup() {
@@ -112,6 +118,9 @@ void loop() {
 
     if (cmd == "DUMP") {
       ReadSpanFromEEPROM();
+    }
+    if (cmd == "CLEAR") {
+      ClearEEPROM();
     }
   }
 
