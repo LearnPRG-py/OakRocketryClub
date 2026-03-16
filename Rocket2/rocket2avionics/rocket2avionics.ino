@@ -122,9 +122,9 @@ void loop() {
   if ((burnDetected) && (!chuteDeployed) && (millis() - burnCompleteTime > 3500)) {
     Serial.println("PARACHUTE TRIGGERED!");
     chuteDeployed = true;
-    digitalWrite(3, HIGH);
+    // digitalWrite(3, HIGH);
     delay(1000);
-    digitalWrite(3, LOW);
+    // digitalWrite(3, LOW);
     digitalWrite(LED_BUILTIN, LOW);
   }
 
