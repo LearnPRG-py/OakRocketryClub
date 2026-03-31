@@ -195,8 +195,11 @@ void saveFlightData() {
     // Unpack the data (reverse of logData packing)
     float altitude = (float)(packedData & 0x3FFF) / 10.0;
     float accelZ = (float)((packedData >> 14) & 0x7FFF) / 2048.0;
-    float gyroPitch = (float)(((packedData >> 29) & 0x7FFF) - 16384) / 8.192;
-    float gyroYaw = (float)(((packedData >> 44) & 0x7FFF) - 16384) / 8.192;
+    // Add int32_t intermediates for sign conversion
+    int32_t rawPitch = (int32_t)((packedData >> 29) & 0x7FFF);
+    float gyroPitch = (float)(rawPitch - 16384) / 8.192;
+    int32_t rawYaw = (int32_t)((packedData >> 44) & 0x7FFF);
+    float gyroYaw = (float)(rawYaw - 16384) / 8.192;
     bool chuteState = (packedData >> 59) & 0x1;
     bool burnState = (packedData >> 60) & 0x1;
     
