@@ -109,7 +109,7 @@ void loop() {
     digitalWrite(LED_BUILTIN, HIGH);
   }
   
-  if (!burnDetected && accelerationMagnitude > 1) { 
+  if (!burnDetected && accelerationMagnitude > 2) { 
     burnStarted = true;
     doDataLog = true;
     burnStartTime = millis();
