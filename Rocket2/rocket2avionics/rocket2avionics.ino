@@ -62,7 +62,7 @@ void setup() {
   
   Serial.println("Flight computer ready!");
   delay(180000); // if sachit is 100% confident then sure
-    // Initialize sensors
+  // Initialize sensors
   if (!BARO.begin()) {
     Serial.println("Failed to initialize pressure sensor!");
     while (1);
