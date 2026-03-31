@@ -109,7 +109,7 @@ void loop() {
     digitalWrite(LED_BUILTIN, HIGH);
   }
   
-  if (!burnDetected && accelerationMagnitude > 3) { 
+  if (!burnDetected && accelerationMagnitude > 1) { 
     burnStarted = true;
     doDataLog = true;
     burnStartTime = millis();
@@ -138,7 +138,6 @@ void loop() {
   delay(10);
 }
 
-// ===== FLASH STORAGE FUNCTIONS =====
 
 void initFlashStorage() {
   Serial.println("Initializing flash storage...");
@@ -160,43 +159,6 @@ void initFlashStorage() {
   
   flashReady = true;
   Serial.println("Flash storage ready!");
-}
-
-void loadFlightConfig() {
-  if (!flashReady) return;
-  
-  FILE* f = fopen("/fs/config.txt", "r");
-  if (f == NULL) {
-    // Create default config
-    saveFlightConfig();
-    return;
-  }
-  
-  char buffer[64];
-  while (fgets(buffer, sizeof(buffer), f)) {
-    if (strstr(buffer, "flight_number=")) {
-      sscanf(buffer, "flight_number=%d", &flightNumber);
-    }
-  }
-  fclose(f);
-  
-  Serial.print("Loaded flight number: ");
-  Serial.println(flightNumber);
-}
-
-void saveFlightConfig() {
-  if (!flashReady) return;
-  
-  FILE* f = fopen("/fs/config.txt", "w");
-  if (f == NULL) {
-    Serial.println("Failed to save config");
-    return;
-  }
-  
-  fprintf(f, "device_id=nano33ble_flight\n");
-  fprintf(f, "version=1.0\n");
-  
-  fclose(f);
 }
 
 void createFlightDataFile() {
@@ -233,8 +195,8 @@ void saveFlightData() {
     // Unpack the data (reverse of logData packing)
     float altitude = (float)(packedData & 0x3FFF) / 10.0;
     float accelZ = (float)((packedData >> 14) & 0x7FFF) / 2048.0;
-    float gyroPitch = (float)((packedData >> 29) & 0x7FFF) / 262.1;
-    float gyroYaw = (float)((packedData >> 44) & 0x7FFF) / 262.1;
+    float gyroPitch = (float)(((packedData >> 29) & 0x7FFF) - 16384) / 8.192;
+    float gyroYaw = (float)(((packedData >> 44) & 0x7FFF) - 16384) / 8.192;
     bool chuteState = (packedData >> 59) & 0x1;
     bool burnState = (packedData >> 60) & 0x1;
     
@@ -353,15 +315,21 @@ void getStorageInfo() {
 
 // ===== ORIGINAL FUNCTIONS =====
 
-void logData(float altitude, float accelZ, float gyroPitch, float gyroYaw, bool bc) {
+uint64_t ReturnWithBounds(float value, int alloced_size) {
+  uint64_t max_val = (1ULL << alloced_size) - 1;
+  float constrained = max(0.0f, min(value, (float)max_val));
+  return (uint64_t)constrained;
+}
+
+void logData(float altitude, float accelMag, float gyroPitch, float gyroYaw, bool bc) {
   if (dataIndex < maxDataPoints) {
     uint64_t packedData = 0;
-    packedData += (uint64_t)(altitude * 10);             
-    packedData += (uint64_t)(accelZ * 2048) << 14;       
-    packedData += (uint64_t)(gyroPitch * 262.1) << 29;   
-    packedData += (uint64_t)(gyroYaw * 262.1) << 44;     
-    packedData += (uint64_t)(chuteDeployed) << 59;
-    packedData += (uint64_t)(burnDetected) << 60;
+    packedData |= ReturnWithBounds(altitude * 10, 14);
+    packedData |= ReturnWithBounds(accelMag * 2048, 15) << 14;
+    packedData |= ReturnWithBounds(gyroPitch * 8.192 + 16384, 15) << 29;
+    packedData |= ReturnWithBounds(gyroYaw * 8.192 + 16384, 15) << 44;
+    packedData |= ReturnWithBounds((float)chuteDeployed, 1) << 59;
+    packedData |= ReturnWithBounds((float)burnDetected, 1) << 60;
     flightData[dataIndex++] = packedData;
     Serial.println(packedData);
   }
