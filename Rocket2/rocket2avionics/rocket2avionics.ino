@@ -71,6 +71,7 @@ void setup() {
     Serial.println("Failed to initialize IMU!");
     while (1);
   }
+  digitalWrite(LED_BUILTIN, HIGH);
 }
 
 void loop() {
@@ -97,7 +98,7 @@ void loop() {
   }
   
   // Data logging starts at burn start
-  if (millis()-burnStartTime <= 100000 && doDataLog) {
+  if (millis()-burnStartTime <= 15000 && doDataLog) {
     logData(smoothedAltitude, accelerationMagnitude, gyroY, gyroZ, bleConnected);
   }
   
@@ -125,10 +126,10 @@ void loop() {
     // digitalWrite(3, HIGH);
     delay(1000);
     // digitalWrite(3, LOW);
-    digitalWrite(LED_BUILTIN, LOW);
+    // digitalWrite(LED_BUILTIN, LOW);
   }
 
-  if (millis() - burnStartTime >= 100000 && doDataLog) {
+  if (millis() - burnStartTime >= 15000 && doDataLog) {
     // Save flight data to flash and output to serial
     saveFlightData();
     outputFlightData();
@@ -327,12 +328,13 @@ uint64_t ReturnWithBounds(float value, int alloced_size) {
 void logData(float altitude, float accelMag, float gyroPitch, float gyroYaw, bool bc) {
   if (dataIndex < maxDataPoints) {
     uint64_t packedData = 0;
-    packedData |= ReturnWithBounds(altitude * 10, 14);
-    packedData |= ReturnWithBounds(accelMag * 2048, 15) << 14;
-    packedData |= ReturnWithBounds(gyroPitch * 8.192 + 16384, 15) << 29;
-    packedData |= ReturnWithBounds(gyroYaw * 8.192 + 16384, 15) << 44;
-    packedData |= ReturnWithBounds((float)chuteDeployed, 1) << 59;
-    packedData |= ReturnWithBounds((float)burnDetected, 1) << 60;
+    packedData |= (uint64_t)ReturnWithBounds(altitude * 10, 14);
+    packedData |= (uint64_t)ReturnWithBounds(accelMag * 2048, 15) << 14;
+    packedData |= (uint64_t)ReturnWithBounds(gyroPitch * 8.192 + 16384, 15) << 29;
+    packedData |= (uint64_t)ReturnWithBounds(gyroYaw * 8.192 + 16384, 15) << 44;
+    packedData |= (uint64_t)ReturnWithBounds((float)chuteDeployed, 1) << 59;
+    packedData |= (uint64_t)ReturnWithBounds((float)burnDetected, 1) << 60;
+
     flightData[dataIndex++] = packedData;
     Serial.println(packedData);
   }
