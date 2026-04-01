@@ -61,7 +61,7 @@ void setup() {
   //if not it just overwrites rip :(
   
   Serial.println("Flight computer ready!");
-  delay(180000); // if sachit is 100% confident then sure
+  delay(300000); // if sachit is 100% confident then sure
   // Initialize sensors
   if (!BARO.begin()) {
     Serial.println("Failed to initialize pressure sensor!");
