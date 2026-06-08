@@ -19,8 +19,7 @@ struct Motor {
       return;
     }
     int index = static_cast<int>(time / switch_every);
-    assert(index <
-           discrete_thrust_curve.size()); // Ensure we don't go out of bounds
+    assert(index < discrete_thrust_curve.size()); // Prevent OOB
     current_force = discrete_thrust_curve[index];
   }
 };
